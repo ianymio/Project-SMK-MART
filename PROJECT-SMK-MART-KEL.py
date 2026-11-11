@@ -1,4 +1,12 @@
 
+import json
+import os
+
+FILE_DB = "smk_mart_db.json"
+FILE_LOG_TRANSAKSI = "riwayat_transaksi.txt"
+FILE_LOG_REVISI = "riwayat_revisi_barang.txt"
+
+
 smk_mart_db = {
     "barang": {},
     "Transaksi": {},
@@ -22,7 +30,37 @@ smk_mart_db = {
     }
 }
 
-nomor_nota = 0
+# 1. Membaca data dari JSON saat program baru dibuka
+def muat_database():
+    if os.path.exists(FILE_DB):
+        with open(FILE_DB, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return smk_mart_db
+
+# 2. Menyimpan data terbaru ke JSON
+def simpan_database():
+    with open(FILE_DB, "w", encoding="utf-8") as f:
+        json.dump(smk_mart_db, f, indent=4)
+
+# 3. Mencatat riwayat revisi barang ke TXT (tanpa datetime)
+def catat_log_revisi(aksi, id_barang, keterangan):
+    with open(FILE_LOG_REVISI, "a", encoding="utf-8") as f:
+        f.write(f"({user_aktif}) | {aksi} | ID: {id_barang} | {keterangan}\n")
+
+# 4. Mencatat riwayat transaksi ke TXT
+def catat_log_transaksi(id_tx):
+    data = smk_mart_db["Transaksi"][id_tx]
+    with open(FILE_LOG_TRANSAKSI, "a", encoding="utf-8") as f:
+        f.write(f"=== NOTA {id_tx} | Tgl: {data['tanggal']} | Kasir: {data['id_kasir']} ===\n")
+        for item in data["items"]:
+            f.write(f"- {item['nama_barang']} x{item['jumlah_beli']} = Rp{item['subtotal']}\n")
+        f.write(f"Total: Rp{data['total_harga']} ({data['metode_pembayaran']})\n\n")
+
+# Jalankan muat_database() dan sesuaikan nomor urut otomatis
+smk_mart_db = muat_database()
+nomor_nota = len(smk_mart_db["Transaksi"])
+nomor_gudang = len(smk_mart_db["Gudang"])
+
 user_aktif = None
 role_aktif = None
 
@@ -93,6 +131,9 @@ def tambah_data_barang():
         "Stok Sekarang": stok_sekarang,
         "Batas Minimum": minimal_stok
     }
+    simpan_database()
+    catat_log_revisi("TAMBAH", id_barang, f"{nama_barang} | Harga: Rp{harga_jual} | Stok: {stok_sekarang}")
+
     print(f"Data barang {nama_barang} berhasil ditambahkan!")  
 
 # TAMPILKAN DAN MENGURUTKAN DATA BARANG
@@ -167,11 +208,18 @@ def edit_data_barang():
     if id_barang not in smk_mart_db["barang"]:
         print("ID Barang tidak ditemukan!")
         return
+
+    data_lama = smk_mart_db["barang"][id_barang].copy()
+
     print("=== Masukkan Data Baru ===")
     smk_mart_db["barang"][id_barang]["Nama Barang"] = input("Masukkan Nama Barang Baru: ")
     smk_mart_db["barang"][id_barang]["Harga Jual"] = input_angka("Masukkan Harga Jual Baru: Rp", minimum=0)
     smk_mart_db["barang"][id_barang]["Stok Sekarang"] = input_angka("Masukkan Stok Sekarang Baru: ", minimum=0)
     smk_mart_db["barang"][id_barang]["Batas Minimum"] = input_angka("Masukkan Batas Minimum Baru: ", minimum=0)
+
+    simpan_database()
+    catat_log_revisi("EDIT", id_barang, f"Stok {data_lama['Stok Sekarang']} -> {smk_mart_db['barang'][id_barang]['Stok Sekarang']}, Harga Rp{data_lama['Harga Jual']} -> Rp{smk_mart_db['barang'][id_barang]['Harga Jual']}")
+
     print("✅ Data barang berhasil diperbarui!")
 #untuk tambah baran(tambah stok berbeda denan edit data barang) -> revisi
 
@@ -185,7 +233,10 @@ def hapus_data_barang():
     if id_barang not in smk_mart_db["barang"]:
         print("ID Barang tidak ditemukan!")
         return
+    nama_lama = smk_mart_db["barang"][id_barang]["Nama Barang"]
     del smk_mart_db["barang"][id_barang]
+    simpan_database()
+    catat_log_revisi("HAPUS", id_barang, f"Barang '{nama_lama}' dihapus")
     print(f"✅ Data barang dengan ID {id_barang} berhasil dihapus!")
 
 # TAMBAH DATA TRANSAKSI
@@ -194,8 +245,7 @@ def tambah_data_transaksi():
     global nomor_nota
     id_transaksi = f"TX{nomor_nota + 1:03d}"  # nomor nota buat auto (revisi) #dn
 
-
-    tanggal = input("Masukkan Tanggal (DD-MM-YYYY): ")
+    tanggal = input("Masukkan Tanggal (DD-MM-YYYY): ").strip()
     id_kasir = user_aktif
 
     keranjang_belanja = []
@@ -285,6 +335,8 @@ def tambah_data_transaksi():
         "total_harga": total_harga_transaksi,
         "metode_pembayaran": metode
     }
+    simpan_database()
+    catat_log_transaksi(id_transaksi)
     cetak_struk_digital(id_transaksi)
 
 def cetak_struk_digital(id_transaksi):
@@ -353,7 +405,6 @@ def laporan_penjualan():
     print(f"Total Barang Terjual : {total_barang_terjual} pcs")
 
 # TAMBAH AKTIVITAS GUDANG
-nomor_gudang = 0
 def tambah_aktivitas_gudang():
     print("=== AKTIVITAS GUDANG ===")
     global nomor_gudang
@@ -389,6 +440,8 @@ def tambah_aktivitas_gudang():
     "jumlah_barang": jumlah_barang,
     "keterangan_tambahan": keterangan_tambahan
 }
+    simpan_database()
+    catat_log_revisi(f"GUDANG-{jenis_aktivitas.upper()}", id_barang, f"Jumlah: {jumlah_barang} pcs | Ket: {keterangan_tambahan}")
     print("✅ Aktivitas gudang berhasil dicatat dan stok fisik telah disinkronkan!")
 
 # TAMBAH DATA PENGGUNA
@@ -421,6 +474,7 @@ def tambah_data_pengguna():
         "password": password,
         "role": role
     }
+    simpan_database()
     print("Data pengguna berhasil ditambahkan!")
 
 # TAMPILKAN DATA PENGGUNA
@@ -446,7 +500,7 @@ while True:
     while True:
         cek_stok_minimum()
         if role_aktif.lower() == "admin":
-            print("=====( MENU UTAMA APLIKASI SMK MART (ADMIN) =====")
+            print("===== MENU UTAMA APLIKASI SMK MART (ADMIN) =====")
             print("1. Tambah Data Barang")
             print("2. Tampilkan Semua Barang")
             print("3. Searching Data Barang")
@@ -493,6 +547,13 @@ while True:
             elif pilihan == "10": tambah_data_pengguna()
             elif pilihan == "11": tampilkan_data_pengguna()
             elif pilihan == "12":
+                pilihan = input("Apakah Anda yakin ingin log out? (y/n): ").lower()
+                if pilihan == "y":
+                    print("Terima kasih! Log Out dari akun sekarang.")
+                    logout = True
+                    break
+                else:
+                    print("Log out dibatalkan. Kembali ke menu utama.")
                 print("Terima kasih! Log Out dari akun sekarang.")
                 logout = True
                 break
@@ -505,11 +566,18 @@ while True:
             elif pilihan == "3": tambah_data_transaksi()
             elif pilihan == "4": tampilkan_data_transaksi()
             elif pilihan == "5":
+                pilihan = input("Apakah Anda yakin ingin log out? (y/n): ").lower()
+                if pilihan == "y":
+                    print("Terima kasih! Log Out dari akun sekarang.")
+                    logout = True
+                    break
+                else:
+                    print("Log out dibatalkan. Kembali ke menu utama.")
                 print("Terima kasih! Log Out dari akun sekarang.")
                 logout = True
                 break
             else:
-                print("Pilihan salah! Silakan ketik angka 1 sampai 6.")
+                print("Pilihan salah! Silakan ketik angka 1 sampai 5.")
                 
         elif role == "gudang":
             if pilihan == "1": tambah_data_barang()
@@ -519,9 +587,13 @@ while True:
             elif pilihan == "5": edit_data_barang()
             elif pilihan == "6": hapus_data_barang()
             elif pilihan == "7":
-                print("Terima kasih! Log Out dari akun sekarang.")
-                logout = True
-                break
+                pilihan = input("Apakah Anda yakin ingin log out? (y/n): ").lower()
+                if pilihan == "y":
+                    print("Terima kasih! Log Out dari akun sekarang.")
+                    logout = True
+                    break
+                else:
+                    print("Log out dibatalkan. Kembali ke menu utama.")
             else:
                 print("Pilihan salah! Silakan ketik angka 1 sampai 7.")
 
