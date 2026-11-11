@@ -1,7 +1,4 @@
 
-from pprint import pprint
-
-
 smk_mart_db = {
     "barang": {},
     "Transaksi": {},
@@ -28,6 +25,17 @@ smk_mart_db = {
 nomor_nota = 0
 user_aktif = None
 role_aktif = None
+
+def input_angka(pesan, minimum=0):
+    while True:
+        try:
+            nilai = int(input(pesan))
+            if nilai < minimum:
+                print(f"❌ Angka tidak boleh kurang dari {minimum}!")
+                continue
+            return nilai
+        except ValueError:
+            print("❌ Masukkan angka yang valid!")
 
 # SISTEM LOGIN
 def login_sistem():
@@ -75,9 +83,9 @@ def tambah_data_barang():
         return
 
     nama_barang = input("Masukkan Nama Barang: ")
-    harga_jual = int(input("Masukkan Harga Jual: Rp"))
-    stok_sekarang = int(input("Masukkan Stok Sekarang: "))
-    minimal_stok = int(input("Masukkan Minimal Stok: "))
+    harga_jual = input_angka("Masukkan Harga Jual: Rp", minimum=0)
+    stok_sekarang = input_angka("Masukkan Stok Sekarang: ", minimum=0)
+    minimal_stok = input_angka("Masukkan Minimal Stok: ", minimum=0)
 
     smk_mart_db["barang"][id_barang] = {
         "Nama Barang": nama_barang,
@@ -161,9 +169,9 @@ def edit_data_barang():
         return
     print("=== Masukkan Data Baru ===")
     smk_mart_db["barang"][id_barang]["Nama Barang"] = input("Masukkan Nama Barang Baru: ")
-    smk_mart_db["barang"][id_barang]["Harga Jual"] = int(input("Masukkan Harga Jual Baru: Rp"))
-    smk_mart_db["barang"][id_barang]["Stok Sekarang"] = int(input("Masukkan Stok Sekarang Baru: "))
-    smk_mart_db["barang"][id_barang]["Batas Minimum"] = int(input("Masukkan Batas Minimum Baru: "))
+    smk_mart_db["barang"][id_barang]["Harga Jual"] = input_angka("Masukkan Harga Jual Baru: Rp", minimum=0)
+    smk_mart_db["barang"][id_barang]["Stok Sekarang"] = input_angka("Masukkan Stok Sekarang Baru: ", minimum=0)
+    smk_mart_db["barang"][id_barang]["Batas Minimum"] = input_angka("Masukkan Batas Minimum Baru: ", minimum=0)
     print("✅ Data barang berhasil diperbarui!")
 #untuk tambah baran(tambah stok berbeda denan edit data barang) -> revisi
 
@@ -184,36 +192,53 @@ def hapus_data_barang():
 def tambah_data_transaksi():
     print("=== MELAKUKAN TRANSAKSI ===")
     global nomor_nota
-    id_transaksi = f"TX{nomor_nota + 1:03d}"  # nomor nota buat auto (revisi)
+    id_transaksi = f"TX{nomor_nota + 1:03d}"  # nomor nota buat auto (revisi) #dn
+
 
     tanggal = input("Masukkan Tanggal (DD-MM-YYYY): ")
-    id_kasir = input("Masukkan ID Kasir yang melayani: ")
+    id_kasir = user_aktif
 
     keranjang_belanja = []
     total_harga_transaksi = 0
     
     while True:
         print("=== Input Barang Belanjaan ===")
-        id_barang = input("Masukkan ID Barang (atau ketik '0' untuk check out): ")
+        id_barang = input("Masukkan ID Barang (ketik '0' untuk check out, '1' untuk lihat daftar barang): ")
+
         if id_barang == '0':
             if not keranjang_belanja:
                 print("❌ Keranjang masih kosong! Transaksi dibatalkan.")
                 return
-            break
+            else:
+                break
+        
+        if id_barang == '1':
+            urutkan_dan_tampilkan_barang()
+            continue
+
         if id_barang not in smk_mart_db["barang"]:
             print("❌ ID Barang tidak ditemukan! Silakan cek kembali daftar barang.")
             continue
-            
-        jumlah_beli = int(input(f"Masukkan Jumlah Beli untuk '{smk_mart_db['barang'][id_barang]['Nama Barang']}': "))
+
+        # 4. Proses input jumlah dan konfirmasi
+        nama_barang = smk_mart_db['barang'][id_barang]['Nama Barang']
+        jumlah_beli = input_angka(f"Masukkan Jumlah Beli untuk '{nama_barang}': ", minimum=1)
+        
+        konfirmasi = input(f"Apakah Anda yakin ingin membeli {jumlah_beli} pcs '{nama_barang}'? (y/n): ").lower()
+        if konfirmasi != 'y':
+            print("❌ Pembelian barang ini dibatalkan.")
+            continue 
+
         detail_barang = smk_mart_db["barang"][id_barang]
         
-        if jumlah_beli > detail_barang["Stok Sekarang"]:
-            print(f"❌ Stok tidak cukup! Sisa stok barang ini tinggal {detail_barang['Stok Sekarang']} pcs.")
+        sudah_di_keranjang = sum(i["jumlah_beli"] for i in keranjang_belanja if i["id_barang"] == id_barang)
+        sisa_stok = detail_barang["Stok Sekarang"] - sudah_di_keranjang
+        if jumlah_beli > sisa_stok:
+            print(f"❌ Stok tidak cukup! Sisa stok barang ini tinggal {sisa_stok} pcs.")
             continue
-            
+        
         subtotal = detail_barang["Harga Jual"] * jumlah_beli
         total_harga_transaksi += subtotal
-        smk_mart_db["barang"][id_barang]["Stok Sekarang"] -= jumlah_beli
         
         keranjang_belanja.append({
             "id_barang": id_barang,
@@ -224,21 +249,36 @@ def tambah_data_transaksi():
         })
         print(f"✅ {detail_barang['Nama Barang']} ({jumlah_beli} pcs) berhasil ditambahkan ke keranjang.")
 
-    print(f"TOTAL YANG HARUS DIBAYAR: Rp{total_harga_transaksi}")
+    print("==============================================")
+    print(f"💸TOTAL YANG HARUS DIBAYAR: Rp{total_harga_transaksi}")
     print("=== METODE PEMBAYARAN ===")
     print("1. Tunai (Cash)")
     print("2. QRIS (Digital)")
     opsi_bayar = input("Pilih metode (1-2): ")
+    if opsi_bayar not in ("1", "2"):
+        print("❌ Metode pembayaran tidak valid! Transaksi dibatalkan.")
+        return
+
     if opsi_bayar == "1":
-        jumlah_bayar = int(input("Masukkan jumlah uang yang dibayarkan: Rp"))
+        metode = "Tunai"
+
+        jumlah_bayar = input_angka("Masukkan jumlah uang yang dibayarkan: Rp", minimum=total_harga_transaksi)
         if jumlah_bayar < total_harga_transaksi:
             print("❌ Uang yang dibayarkan kurang! Transaksi dibatalkan.")
             return
-        else:
-            kembalian = jumlah_bayar - total_harga_transaksi
-    metode = "Tunai" if opsi_bayar == "1" else "QRIS" #jika cash harus ada jumlah bayar dan kembalian (revisi)d
+        kembalian = jumlah_bayar - total_harga_transaksi
+    else:
+        metode = "QRIS"
+        jumlah_bayar = total_harga_transaksi
+        kembalian = 0
 
+    for item in keranjang_belanja:
+        smk_mart_db["barang"][item["id_barang"]]["Stok Sekarang"] -= item["jumlah_beli"]
+
+    nomor_nota += 1
     smk_mart_db["Transaksi"][id_transaksi] = {
+        "jumlah_bayar": jumlah_bayar,
+        "kembalian": kembalian,
         "tanggal": tanggal,
         "id_kasir": id_kasir,
         "items": keranjang_belanja,
@@ -323,7 +363,10 @@ def tambah_aktivitas_gudang():
         return
     tanggal_barang_masuk = input("Masukkan Tanggal Aktivitas (DD-MM-YYYY): ")
     jenis_aktivitas = input("Masukkan Jenis Aktivitas (Masuk/Keluar): ")
-    jumlah_barang = int(input("Masukkan Jumlah Barang: "))
+    jumlah_barang = input_angka("Masukkan Jumlah Barang: ", minimum=0)
+    if jumlah_barang <= 0:
+        print("Jumlah barang harus lebih dari 0!")
+        return
     keterangan_tambahan = input("Keterangan Tambahan: ")
 
     if jenis_aktivitas.lower() == "masuk":
@@ -338,26 +381,40 @@ def tambah_aktivitas_gudang():
         return
 
     nomor_gudang += 1
-    smk_mart_db["Gudang"][id_barang] = {
-        "tanggal_barang_masuk": tanggal_barang_masuk,
-        "jenis_aktivitas": jenis_aktivitas.upper(),
-        "jumlah_barang": jumlah_barang,
-        "keterangan_tambahan": keterangan_tambahan
-    }
+    id_aktivitas = f"GDG{nomor_gudang:03d}"
+    smk_mart_db["Gudang"][id_aktivitas] = {
+    "id_barang": id_barang,
+    "tanggal_barang_masuk": tanggal_barang_masuk,
+    "jenis_aktivitas": jenis_aktivitas.upper(),
+    "jumlah_barang": jumlah_barang,
+    "keterangan_tambahan": keterangan_tambahan
+}
     print("✅ Aktivitas gudang berhasil dicatat dan stok fisik telah disinkronkan!")
-    print(f"Data Gudang Saat Ini: {smk_mart_db['Gudang']}")
 
 # TAMBAH DATA PENGGUNA
 def tambah_data_pengguna():
     print("=== MENAMBAHKAN DATA PENGGUNA ===")
-    id_user = input("Masukkan ID USER : ")
+    id_user = f"USR{len(smk_mart_db['Pengguna']) + 1:03d}"
     if id_user in smk_mart_db["Pengguna"]:
         print("ID USER sudah ada. Silakan masukkan ID USER yang berbeda.")
         return
 
-    username = input("Masukkan Username : ")
+    username = input("Masukkan Username : ").strip()
+    if not username:
+        print("❌ Username tidak boleh kosong!")
+        return
+    for data in smk_mart_db["Pengguna"].values():
+        if data["username"].lower() == username.lower():
+            print("❌ Username sudah dipakai!")
+            return
     password = input("Masukkan Password : ")
-    role = input("Masukkan Role (Admin/Kasir/Gudang): ")
+    if not password:
+        print("❌ Password tidak boleh kosong!")
+        return
+    role = input("Masukkan Role (Admin/Kasir/Gudang): ").strip().capitalize()
+    if role.lower() not in ("admin", "kasir", "gudang"):
+        print("❌ Role tidak valid! Gunakan 'Admin', 'Kasir', atau 'Gudang'.")
+        return
 
     smk_mart_db["Pengguna"][id_user] = {
         "username": username,
@@ -389,7 +446,7 @@ while True:
     while True:
         cek_stok_minimum()
         if role_aktif.lower() == "admin":
-            print("===== MENU UTAMA APLIKASI SMK MART (ADMIN) =====")
+            print("=====( MENU UTAMA APLIKASI SMK MART (ADMIN) =====")
             print("1. Tambah Data Barang")
             print("2. Tampilkan Semua Barang")
             print("3. Searching Data Barang")
@@ -401,15 +458,16 @@ while True:
             print("9. Catat Aktivitas Gudang")
             print("10. Tambah Data Pengguna")
             print("11. Tampilkan Semua Pengguna")
-            print("12. Keluar dari Program")
+            print("12. Log Out")
             pilihan = input("Pilih menu (1-12): ")
         elif role_aktif.lower() == "kasir":
             print("===== MENU UTAMA APLIKASI SMK MART (KASIR) =====")
-            print("1. Tambah Transaksi Penjualan")
-            print("2. Tampilkan Riwayat Transaksi")
-            print("3. Laporan Penjualan")
-            print("4. Keluar dari Program")
-            pilihan = input("Pilih menu (1-4): ")
+            print("1. Tampilkan Semua Barang")
+            print("2. Searching Data Barang")
+            print("3. Tambah Transaksi Penjualan")
+            print("4. Tampilkan Riwayat Transaksi")
+            print("5. Log Out")
+            pilihan = input("Pilih menu (1-6): ")
         elif role_aktif.lower() == "gudang":
             print("===== MENU UTAMA APLIKASI SMK MART (GUDANG) =====")
             print("1. Tambah Data Barang")
@@ -418,99 +476,54 @@ while True:
             print("4. Searching Data Barang")
             print("5. Edit Data Barang")
             print("6. Hapus Data Barang")
-            print("7. Keluar dari Program")
+            print("7. Log Out")
             pilihan = input("Pilih menu (1-7): ")
 
-        if pilihan == "1":
-            if role_aktif.lower() == "admin" or role_aktif.lower() == "gudang":
-                tambah_data_barang()
-            elif role_aktif.lower() == "kasir":
-                tambah_data_transaksi()
-        elif pilihan == "2":
-            if role_aktif.lower() == "admin":
-                urutkan_dan_tampilkan_barang()
-            elif role_aktif.lower() == "kasir":
-                tampilkan_data_transaksi()
-            elif role_aktif.lower() == "gudang":
-                tambah_aktivitas_gudang()
-        elif pilihan == "3":
-            if role_aktif.lower() == "admin":
-                searching_data_barang()
-            elif role_aktif.lower() == "kasir":
-                laporan_penjualan()
-            elif role_aktif.lower() == "gudang":
-                urutkan_dan_tampilkan_barang()
-        elif pilihan == "4":
-            if role_aktif.lower() == "admin":
-                edit_data_barang()
-            elif role_aktif.lower() == "kasir":
-                print("Terima kasih! Keluar dari program SMK Mart.")
+        role = role_aktif.lower()
+        if role == "admin":
+            if pilihan == "1": tambah_data_barang()
+            elif pilihan == "2": urutkan_dan_tampilkan_barang()
+            elif pilihan == "3": searching_data_barang()
+            elif pilihan == "4": edit_data_barang()
+            elif pilihan == "5": hapus_data_barang()
+            elif pilihan == "6": tambah_data_transaksi()
+            elif pilihan == "7": tampilkan_data_transaksi()
+            elif pilihan == "8": laporan_penjualan()
+            elif pilihan == "9": tambah_aktivitas_gudang()
+            elif pilihan == "10": tambah_data_pengguna()
+            elif pilihan == "11": tampilkan_data_pengguna()
+            elif pilihan == "12":
+                print("Terima kasih! Log Out dari akun sekarang.")
                 logout = True
                 break
-            elif role_aktif.lower() == "gudang":
-                searching_data_barang()
-        elif pilihan == "5":
-            if role_aktif.lower() == "admin":
-                hapus_data_barang()
-            elif role_aktif.lower() == "kasir":
-                print("Pilihan salah! Silakan ketik angka 1 sampai 4.")
-            elif role_aktif.lower() == "gudang":
-                edit_data_barang()
-        elif pilihan == "6":
-            if role_aktif.lower() == "admin":
-                tambah_data_transaksi()
-            elif role_aktif.lower() == "gudang":
-                hapus_data_barang()
-            elif role_aktif.lower() == "kasir":
-                print("Pilihan salah! Silakan ketik angka 1 sampai 4.")
-        elif pilihan == "7":
-            if role_aktif.lower() == "admin":
-                tampilkan_data_transaksi()
-            elif role_aktif.lower() == "kasir":
-                print("Pilihan salah! Silakan ketik angka 1 sampai 4.")
-            elif role_aktif.lower() == "gudang":
-                print("Terima kasih! Keluar dari program SMK Mart.")
+            else:
+                print("Pilihan salah! Silakan ketik angka 1 sampai 12.")
+                
+        elif role == "kasir":
+            if pilihan == "1": urutkan_dan_tampilkan_barang()
+            elif pilihan == "2": searching_data_barang()
+            elif pilihan == "3": tambah_data_transaksi()
+            elif pilihan == "4": tampilkan_data_transaksi()
+            elif pilihan == "5":
+                print("Terima kasih! Log Out dari akun sekarang.")
                 logout = True
                 break
-        elif pilihan == "8":
-            if role_aktif.lower() == "admin":
-                laporan_penjualan()
-            elif role_aktif.lower() == "kasir":
-                print("Pilihan salah! Silakan ketik angka 1 sampai 4.")
-            elif role_aktif.lower() == "gudang":
-                print("Pilihan salah! Silakan ketik angka 1 sampai 7.")
-        elif pilihan == "9":
-            if role_aktif.lower() == "admin":
-                tambah_aktivitas_gudang()
-            elif role_aktif.lower() == "kasir":
-                print("Pilihan salah! Silakan ketik angka 1 sampai 4.")
-            elif role_aktif.lower() == "gudang":
-                print("Pilihan salah! Silakan ketik angka 1 sampai 7.")
-        elif pilihan == "10":
-            if role_aktif.lower() == "admin":
-                tambah_data_pengguna()
-            elif role_aktif.lower() == "kasir":
-                print("Pilihan salah! Silakan ketik angka 1 sampai 4.")
-            elif role_aktif.lower() == "gudang":
-                print("Pilihan salah! Silakan ketik angka 1 sampai 7.")
-        elif pilihan == "11":
-            if role_aktif.lower() == "admin":
-                tampilkan_data_pengguna() 
-            elif role_aktif.lower() == "kasir":
-                print("Pilihan salah! Silakan ketik angka 1 sampai 4.")
-            elif role_aktif.lower() == "gudang":
-                print("Pilihan salah! Silakan ketik angka 1 sampai 7.")   
-        elif pilihan == "12":
-            if role_aktif.lower() == "admin":
-                print("Terima kasih! Keluar dari program SMK Mart.")
+            else:
+                print("Pilihan salah! Silakan ketik angka 1 sampai 6.")
+                
+        elif role == "gudang":
+            if pilihan == "1": tambah_data_barang()
+            elif pilihan == "2": tambah_aktivitas_gudang()
+            elif pilihan == "3": urutkan_dan_tampilkan_barang()
+            elif pilihan == "4": searching_data_barang()
+            elif pilihan == "5": edit_data_barang()
+            elif pilihan == "6": hapus_data_barang()
+            elif pilihan == "7":
+                print("Terima kasih! Log Out dari akun sekarang.")
                 logout = True
                 break
-            elif role_aktif.lower() == "kasir":
-                print("Pilihan salah! Silakan ketik angka 1 sampai 4.")
-            elif role_aktif.lower() == "gudang":
+            else:
                 print("Pilihan salah! Silakan ketik angka 1 sampai 7.")
-        else:
-            print("Pilihan salah! Silakan ketik angka 1 sampai 12.")
 
 
 
