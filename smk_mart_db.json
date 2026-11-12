@@ -1,0 +1,47 @@
+{
+    "barang": {
+        "BRG001": {
+            "Nama Barang": "Pulpen kokoro",
+            "Harga Jual": 2000,
+            "Stok Sekarang": 180,
+            "Batas Minimum": 100
+        }
+    },
+    "Transaksi": {
+        "TX001": {
+            "jumlah_bayar": 35000,
+            "kembalian": 2000,
+            "tanggal": "11-11-2026",
+            "id_kasir": "admin",
+            "items": [
+                {
+                    "id_barang": "BRG001",
+                    "nama_barang": "Pulpen",
+                    "harga_satuan": 3000,
+                    "jumlah_beli": 11,
+                    "subtotal": 33000
+                }
+            ],
+            "total_harga": 33000,
+            "metode_pembayaran": "Tunai"
+        }
+    },
+    "Gudang": {},
+    "Pengguna": {
+        "USR001": {
+            "username": "admin",
+            "password": "123",
+            "role": "Admin"
+        },
+        "USR002": {
+            "username": "kasir",
+            "password": "123",
+            "role": "Kasir"
+        },
+        "USR003": {
+            "username": "gudang",
+            "password": "123",
+            "role": "Gudang"
+        }
+    }
+}

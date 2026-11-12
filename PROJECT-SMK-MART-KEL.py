@@ -115,26 +115,31 @@ def cek_stok_minimum():
 # TAMBAH DATA BARANG
 def tambah_data_barang():
     print("=== Menambahkan Data Barang ===")
-    id_barang = input("Masukkan ID Barang: ")
+    id_barang = input("Masukkan ID Barang: ").strip()
     if id_barang in smk_mart_db["barang"]:
         print("ID barang sudah ada! Masukkan ID Barang baru.")
         return
 
-    nama_barang = input("Masukkan Nama Barang: ")
+    nama_barang = input("Masukkan Nama Barang: ").strip()
     harga_jual = input_angka("Masukkan Harga Jual: Rp", minimum=0)
     stok_sekarang = input_angka("Masukkan Stok Sekarang: ", minimum=0)
     minimal_stok = input_angka("Masukkan Minimal Stok: ", minimum=0)
+    konfirmasi_tambah = input(f"Apakah Anda yakin ingin menambahkan barang '{nama_barang}'? (ya/tidak): ").lower()
 
-    smk_mart_db["barang"][id_barang] = {
-        "Nama Barang": nama_barang,
-        "Harga Jual": harga_jual,
-        "Stok Sekarang": stok_sekarang,
-        "Batas Minimum": minimal_stok
-    }
-    simpan_database()
-    catat_log_revisi("TAMBAH", id_barang, f"{nama_barang} | Harga: Rp{harga_jual} | Stok: {stok_sekarang}")
+    if konfirmasi_tambah == 'ya':
+        smk_mart_db["barang"][id_barang] = {
+            "Nama Barang": nama_barang,
+            "Harga Jual": harga_jual,
+            "Stok Sekarang": stok_sekarang,
+            "Batas Minimum": minimal_stok
+        }
+        simpan_database()
+        catat_log_revisi("TAMBAH", id_barang, f"{nama_barang} | Harga: Rp{harga_jual} | Stok: {stok_sekarang}")
+        print(f"✅ Data barang '{nama_barang}' berhasil ditambahkan!")
+    else:
+        print("❌ Penambahan barang dibatalkan.")
+        return
 
-    print(f"Data barang {nama_barang} berhasil ditambahkan!")  
 
 # TAMPILKAN DAN MENGURUTKAN DATA BARANG
 def urutkan_dan_tampilkan_barang():
@@ -212,15 +217,28 @@ def edit_data_barang():
     data_lama = smk_mart_db["barang"][id_barang].copy()
 
     print("=== Masukkan Data Baru ===")
-    smk_mart_db["barang"][id_barang]["Nama Barang"] = input("Masukkan Nama Barang Baru: ")
-    smk_mart_db["barang"][id_barang]["Harga Jual"] = input_angka("Masukkan Harga Jual Baru: Rp", minimum=0)
-    smk_mart_db["barang"][id_barang]["Stok Sekarang"] = input_angka("Masukkan Stok Sekarang Baru: ", minimum=0)
-    smk_mart_db["barang"][id_barang]["Batas Minimum"] = input_angka("Masukkan Batas Minimum Baru: ", minimum=0)
+    
+    nama_baru = input("Masukkan Nama Barang Baru: ")
+    harga_baru = input_angka("Masukkan Harga Jual Baru: Rp", minimum=0)
+    stok_baru = input_angka("Masukkan Stok Sekarang Baru: ", minimum=0)
+    min_baru = input_angka("Masukkan Batas Minimum Baru: ", minimum=0)
+    
+    konfirmasi_edit = input("Apakah Anda yakin ingin menyimpan perubahan ini? (ya/tidak): ").lower()
+    if konfirmasi_edit == 'ya':
+        smk_mart_db["barang"][id_barang] = {
+            "Nama Barang": nama_baru,
+            "Harga Jual": harga_baru,
+            "Stok Sekarang": stok_baru,
+            "Batas Minimum": min_baru
+        }
+        simpan_database()
+        catat_log_revisi("EDIT", id_barang, f"Stok {data_lama['Stok Sekarang']} -> {stok_baru}, Harga Rp{data_lama['Harga Jual']} -> Rp{harga_baru}")
+        print("✅ Data barang berhasil diperbarui!")
+    else:
+        print("❌ Perubahan data barang dibatalkan.")
 
-    simpan_database()
-    catat_log_revisi("EDIT", id_barang, f"Stok {data_lama['Stok Sekarang']} -> {smk_mart_db['barang'][id_barang]['Stok Sekarang']}, Harga Rp{data_lama['Harga Jual']} -> Rp{smk_mart_db['barang'][id_barang]['Harga Jual']}")
+ 
 
-    print("✅ Data barang berhasil diperbarui!")
 #untuk tambah baran(tambah stok berbeda denan edit data barang) -> revisi
 
 # HAPUS DATA BARANG
@@ -234,10 +252,16 @@ def hapus_data_barang():
         print("ID Barang tidak ditemukan!")
         return
     nama_lama = smk_mart_db["barang"][id_barang]["Nama Barang"]
-    del smk_mart_db["barang"][id_barang]
-    simpan_database()
-    catat_log_revisi("HAPUS", id_barang, f"Barang '{nama_lama}' dihapus")
-    print(f"✅ Data barang dengan ID {id_barang} berhasil dihapus!")
+    konfirmasi_hapus = input(f"Apakah Anda yakin ingin menghapus barang dengan ID {id_barang}? (ya/tidak): ").lower()
+    if konfirmasi_hapus != 'ya':
+            print("❌ Penghapusan barang dibatalkan.")
+            return
+    else:
+        konfirmasi_hapus != 'ya'
+        del smk_mart_db["barang"][id_barang]
+        simpan_database()
+        catat_log_revisi("HAPUS", id_barang, f"Barang '{nama_lama}' dihapus")
+        print(f"✅ Data barang dengan ID {id_barang} berhasil dihapus!")
 
 # TAMBAH DATA TRANSAKSI
 def tambah_data_transaksi():
@@ -521,7 +545,7 @@ while True:
             print("3. Tambah Transaksi Penjualan")
             print("4. Tampilkan Riwayat Transaksi")
             print("5. Log Out")
-            pilihan = input("Pilih menu (1-6): ")
+            pilihan = input("Pilih menu (1-5): ")
         elif role_aktif.lower() == "gudang":
             print("===== MENU UTAMA APLIKASI SMK MART (GUDANG) =====")
             print("1. Tambah Data Barang")
@@ -554,11 +578,9 @@ while True:
                     break
                 else:
                     print("Log out dibatalkan. Kembali ke menu utama.")
-                print("Terima kasih! Log Out dari akun sekarang.")
-                logout = True
-                break
             else:
                 print("Pilihan salah! Silakan ketik angka 1 sampai 12.")
+
                 
         elif role == "kasir":
             if pilihan == "1": urutkan_dan_tampilkan_barang()
@@ -573,11 +595,9 @@ while True:
                     break
                 else:
                     print("Log out dibatalkan. Kembali ke menu utama.")
-                print("Terima kasih! Log Out dari akun sekarang.")
-                logout = True
-                break
             else:
                 print("Pilihan salah! Silakan ketik angka 1 sampai 5.")
+
                 
         elif role == "gudang":
             if pilihan == "1": tambah_data_barang()

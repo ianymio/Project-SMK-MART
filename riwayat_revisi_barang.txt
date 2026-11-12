@@ -1,0 +1,2 @@
+(admin) | TAMBAH | ID: BRG001 | Pulpen | Harga: Rp3000 | Stok: 200
+(admin) | EDIT | ID: BRG001 | Stok 189 -> 180, Harga Rp3000 -> Rp2000
