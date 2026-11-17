@@ -1,4 +1,21 @@
-=== NOTA TX001 | Tgl: 11-11-2026 | Kasir: admin ===
-- Pulpen x11 = Rp33000
-Total: Rp33000 (Tunai)
+=== NOTA TX002 | Tgl: 15-11-2026 23:46:22 | Kasir: admin ===
+- Pulpen kokoro x3 = Rp6000
+Total: Rp6000 (Tunai)
+
+=== NOTA TX003 | Tgl: 16-11-2026 12:09:20 | Kasir: admin ===
+- Penggaris Hogwarts x1 = Rp50000
+Total: Rp50000 (Tunai)
+
+=== NOTA TX004 | Tgl: 16-11-2026 13:04:59 | Kasir: kasir ===
+- Penggaris Hogwarts x2 = Rp100000
+Total: Rp100000 (Tunai)
+
+=== NOTA TX005 | Tgl: 17-11-2026 09:20:12 | Kasir: admin ===
+- Pensil Joyko x1 = Rp4500
+Total: Rp4500 (Tunai)
+
+=== NOTA TX006 | Tgl: 17-11-2026 09:22:50 | Kasir: admin ===
+- Penggaris Hogwarts x1 = Rp50000
+- Pensil Dior x1 = Rp5000
+Total: Rp55000 (Tunai)
 
