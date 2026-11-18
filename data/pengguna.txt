@@ -1,0 +1,4 @@
+USR001|admin|admin123|Admin|Admin|aktif
+USR002|kasir|kasir123|Kasir|Kasir|aktif
+USR003|gudang|gudang123|Staf Gudang|Gudang|aktif
+USR004|kasir23|kasir123|onit|admin|aktif
