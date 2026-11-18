@@ -4,12 +4,3 @@
 (admin) | EDIT | ID: BRG004 | Stok 1 -> 25, Harga Rp3000 -> Rp5000
 (admin) | HAPUS | ID: BRG003 | Barang 'Susu' dihapus
 (admin) | EDIT | ID: BRG004 | Harga: Rp5000 -> Rp50000
-(admin) | EDIT | ID: BRG001 | 
-(admin) | TAMBAH | ID: BRG005 | SUSU COKLAT | Modal: Rp4000 | Jual: Rp4500 | Stok: 20
-(admin) | EDIT | ID: BRG005 | Nama: SUSU COKLAT -> PENSIL JOYKO
-(admin) | GUDANG-MASUK | ID: BRG002 | Jumlah: 20 pcs | Ket: -
-(admin) | GUDANG-KELUAR | ID: BRG001 | Jumlah: 10 pcs | Ket: -
-(admin) | GUDANG-MASUK | ID: BRG001 | Jumlah: 10 pcs | Ket: -
-(admin) | EDIT | ID: BRG005 | Nama: PENSIL JOYKO -> Pensil Joyko
-(admin) | GUDANG-KELUAR | ID: BRG001 | Jumlah: 76 pcs | Ket: exp
-(admin) | GUDANG-MASUK | ID: BRG002 | Jumlah: 1 pcs | Ket: -

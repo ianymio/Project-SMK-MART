@@ -1,0 +1,2 @@
+[18-11-2026 08:57:10] (admin) | PULIHKAN_USER | ID: USR004 | Pengguna 'kasir02' diaktifkan kembali.
+[18-11-2026 09:14:03] (admin) | NONAKTIF_USER | ID: USR002 | Pengguna 'kasir' dinonaktifkan.

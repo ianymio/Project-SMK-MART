@@ -6,104 +6,40 @@
             "Harga Jual": 2000,
             "Stok Sekarang": 101,
             "Batas Minimum": 100,
-            "terhapus": false
+            "terhapus": false,
+            "Terhapus": false
         },
         "BRG002": {
             "Nama Barang": "Pensil Dior",
             "Harga Jual": 5000,
             "Stok Sekarang": 30,
             "Batas Minimum": 11,
-            "terhapus": false
+            "terhapus": false,
+            "Terhapus": false
         },
         "BRG004": {
             "Nama Barang": "Penggaris Hogwarts",
             "Harga Jual": 50000,
             "Stok Sekarang": 21,
             "Batas Minimum": 10,
-            "terhapus": false
+            "terhapus": false,
+            "Terhapus": false
         },
         "BRG005": {
             "Nama Barang": "Pensil Joyko",
             "Harga Beli": 4000,
             "Harga Jual": 4500,
-            "Stok Sekarang": 19,
+            "Stok Sekarang": 18,
             "Batas Minimum": 10,
-            "terhapus": false
+            "terhapus": false,
+            "Terhapus": false
         }
     },
     "Transaksi": {
-        "TX001": {
-            "jumlah_bayar": 35000,
-            "kembalian": 2000,
-            "tanggal": "11-11-2026",
-            "id_kasir": "admin",
-            "items": [
-                {
-                    "id_barang": "BRG001",
-                    "nama_barang": "Pulpen",
-                    "harga_satuan": 3000,
-                    "jumlah_beli": 11,
-                    "subtotal": 33000
-                }
-            ],
-            "total_harga": 33000,
-            "metode_pembayaran": "Tunai"
-        },
-        "TX002": {
-            "jumlah_bayar": 10000,
-            "kembalian": 4000,
-            "tanggal": "15-11-2026 23:46:22",
-            "id_kasir": "admin",
-            "items": [
-                {
-                    "id_barang": "BRG001",
-                    "nama_barang": "Pulpen kokoro",
-                    "harga_satuan": 2000,
-                    "jumlah_beli": 3,
-                    "subtotal": 6000
-                }
-            ],
-            "total_harga": 6000,
-            "metode_pembayaran": "Tunai"
-        },
-        "TX003": {
-            "jumlah_bayar": 50000,
-            "kembalian": 0,
-            "tanggal": "16-11-2026 12:09:20",
-            "id_kasir": "admin",
-            "items": [
-                {
-                    "id_barang": "BRG004",
-                    "nama_barang": "Penggaris Hogwarts",
-                    "harga_satuan": 50000,
-                    "jumlah_beli": 1,
-                    "subtotal": 50000
-                }
-            ],
-            "total_harga": 50000,
-            "metode_pembayaran": "Tunai"
-        },
-        "TX004": {
-            "jumlah_bayar": 100000,
-            "kembalian": 0,
-            "tanggal": "16-11-2026 13:04:59",
-            "id_kasir": "kasir",
-            "items": [
-                {
-                    "id_barang": "BRG004",
-                    "nama_barang": "Penggaris Hogwarts",
-                    "harga_satuan": 50000,
-                    "jumlah_beli": 2,
-                    "subtotal": 100000
-                }
-            ],
-            "total_harga": 100000,
-            "metode_pembayaran": "Tunai"
-        },
-        "TX005": {
+        "TX20261117105654": {
             "jumlah_bayar": 5000,
             "kembalian": 500,
-            "tanggal": "17-11-2026 09:20:12",
+            "tanggal": "17-11-2026 10:56:10",
             "id_kasir": "admin",
             "items": [
                 {
@@ -117,70 +53,9 @@
             ],
             "total_harga": 4500,
             "metode_pembayaran": "Tunai"
-        },
-        "TX006": {
-            "jumlah_bayar": 60000,
-            "kembalian": 5000,
-            "tanggal": "17-11-2026 09:22:50",
-            "id_kasir": "admin",
-            "items": [
-                {
-                    "id_barang": "BRG004",
-                    "nama_barang": "Penggaris Hogwarts",
-                    "harga_beli": 0,
-                    "harga_satuan": 50000,
-                    "jumlah_beli": 1,
-                    "subtotal": 50000
-                },
-                {
-                    "id_barang": "BRG002",
-                    "nama_barang": "Pensil Dior",
-                    "harga_beli": 0,
-                    "harga_satuan": 5000,
-                    "jumlah_beli": 1,
-                    "subtotal": 5000
-                }
-            ],
-            "total_harga": 55000,
-            "metode_pembayaran": "Tunai"
         }
     },
     "Gudang": {
-        "GDG001": {
-            "id_barang": "BRG002",
-            "tanggal_barang_masuk": "16-11-2026 13:02:00",
-            "jenis_aktivitas": "MASUK",
-            "jumlah_barang": 20,
-            "keterangan_tambahan": "-"
-        },
-        "GDG002": {
-            "id_barang": "BRG001",
-            "tanggal_barang_masuk": "16-11-2026 13:02:50",
-            "jenis_aktivitas": "KELUAR",
-            "jumlah_barang": 10,
-            "keterangan_tambahan": "-"
-        },
-        "GDG003": {
-            "id_barang": "BRG001",
-            "tanggal_barang_masuk": "16-11-2026 15:16:05",
-            "jenis_aktivitas": "MASUK",
-            "jumlah_barang": 10,
-            "keterangan_tambahan": "-"
-        },
-        "GDG004": {
-            "id_barang": "BRG001",
-            "tanggal_barang_masuk": "16-11-2026 16:13:04",
-            "jenis_aktivitas": "KELUAR",
-            "jumlah_barang": 76,
-            "keterangan_tambahan": "exp"
-        },
-        "GDG005": {
-            "id_barang": "BRG002",
-            "tanggal_barang_masuk": "16-11-2026 16:14:19",
-            "jenis_aktivitas": "MASUK",
-            "jumlah_barang": 1,
-            "keterangan_tambahan": "-"
-        }
     },
     "Pengguna": {
         "USR001": {
@@ -191,7 +66,8 @@
         "USR002": {
             "username": "kasir",
             "password": "123",
-            "role": "Kasir"
+            "role": "Kasir",
+            "Terhapus": true
         },
         "USR003": {
             "username": "gudang",
@@ -201,7 +77,8 @@
         "USR004": {
             "username": "kasir02",
             "password": "123",
-            "role": "Kasir"
+            "role": "Kasir",
+            "Terhapus": false
         }
     }
 }
