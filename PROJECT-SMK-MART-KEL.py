@@ -1,7 +1,4 @@
 
-# fitur hapus pengguna maupun barang dan dapat dipulihkan (soft delete) | 50/50 (tinggal pulihkan)
-# edit qty di keranjang belanjaan || FIX | x
-# cari riwayat transaksi berdasarkan tanggal | x 
 import os
 import getpass
 from datetime import datetime, timedelta
@@ -639,7 +636,7 @@ def tambah_data_transaksi():
         while True:
             print("\n--- Input Barang Belanjaan ---")
             print("Navigasi: [L]ihat Daftar | [E]dit Keranjang | [S]elesai / Bayar | [B]atal Transaksi")
-            kata_kunci = input("Masukkan Kode atau Nama Barang / Navigasi: ").strip()
+            kata_kunci = input("Masukkan Kode atau Nama Barang / Navigasi: ").strip().upper()
 
             if not kata_kunci:
                 continue
@@ -695,10 +692,12 @@ def tambah_data_transaksi():
                     print(f"✅ Jumlah '{item_ubah['nama']}' diperbarui menjadi {qty_baru} pcs.")
                 continue
 
-            # Pencarian barang berdasarkan kode atau sebagian nama (case-insensitive)
             cocok = []
             for b in daftar_barang:
-                if kata_kunci.upper() == b.upper() or kata_kunci.lower() in b.lower():
+                kode_barang = b[0]
+                nama_barang = b[1]
+                
+                if kata_kunci.upper() == kode_barang.upper() or kata_kunci.lower() in nama_barang.lower():
                     cocok.append(b)
 
             if not cocok:
@@ -707,16 +706,20 @@ def tambah_data_transaksi():
 
             barang_terpilih = None
             if len(cocok) == 1:
-                barang_terpilih = cocok
+                # Ambil index ke-0 (satu-satunya barang yang cocok)
+                barang_terpilih = cocok[0]
             else:
                 print(f"\nDitemukan {len(cocok)} barang yang cocok:")
                 for idx, b in enumerate(cocok, start=1):
-                    print(f"{idx}. [{b}] {b} ({b}) - {format_rupiah(b)} | Stok: {b}")
+                    # b[0]=kode, b[1]=nama, b[2]=kategori, b[3]=harga, b[4]=stok
+                    print(f"{idx}. [{b[0]}] {b[1]} ({b[2]}) - {format_rupiah(b[3])} | Stok: {b[4]}")
                 print("0. Batal pilih")
+                
                 pilih_brg = input_angka("Pilih nomor barang: ", minimum=0)
                 if pilih_brg == 0 or pilih_brg > len(cocok):
                     continue
                 barang_terpilih = cocok[pilih_brg - 1]
+
 
             kode_brg, nama_brg, _, harga_str, stok_str, _ = barang_terpilih
             harga_brg = int(harga_str)
@@ -982,7 +985,6 @@ def laporan_penjualan():
     semua_trx = baca_file(FILE_TRANSAKSI)
     semua_detail = baca_file(FILE_DETAIL_TRANSAKSI)
 
-    # Filter transaksi dalam rentang tanggal (format YYYY-MM-DD bisa dibandingkan langsung sebagai string)
     trx_terfilter = []
     for t in semua_trx:
         if len(t) >= 8 and tgl_awal_db <= t <= tgl_akhir_db:
@@ -1014,7 +1016,6 @@ def laporan_penjualan():
             rekap_barang[kode_b]["qty"] += qty_b
             rekap_barang[kode_b]["omzet"] += sub_b
 
-    # Urutkan 5 barang terlaris: qty terbanyak (-qty), jika seri urut kode menaik (kode)
     top_5_barang = sorted(rekap_barang.values(), key=lambda x: (-x["qty"], x["kode"]))[:5]
 
     baris_laporan = [

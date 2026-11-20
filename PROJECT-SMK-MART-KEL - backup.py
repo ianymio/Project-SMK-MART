@@ -762,7 +762,6 @@ def tambah_aktivitas_gudang():
         print("❌ Jenis aktivitas salah! Gunakan 'm' atau 'k'.")
         return
 
-    # 2. Input jumlah barang setelah dipastikan jenis aktivitasnya valid
     jumlah_barang = input_angka("Masukkan Jumlah Barang: ", minimum=1)
     keterangan_tambahan = input("Keterangan Tambahan: ")
 
