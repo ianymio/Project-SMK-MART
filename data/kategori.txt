@@ -1,0 +1,5 @@
+KAT001|Sembako
+KAT002|Minuman
+KAT003|Kebersihan
+KAT004|Snack
+KAT005|Makanan

@@ -1,7 +1,17 @@
 import os
 import sys
+import shutil
 import getpass
+import hashlib
 from datetime import datetime, timedelta
+
+# [0] = Kode Barang
+# [1] = Nama Barang
+# [2] = Kategori
+# [3] = Harga Beli
+# [4] = Harga Jual 
+# [5] = Stok Sekarang 
+# [6] = Stok Minimum 
 
 # ==========================================
 # 1. KONFIGURASI FOLDER & LOKASI FILE .TXT
@@ -9,9 +19,11 @@ from datetime import datetime, timedelta
 FOLDER_DATA = "data"
 FOLDER_STRUK = "struk"
 FOLDER_LAPORAN = "laporan"
+FOLDER_BACKUP = "backup" 
 
 FILE_PENGGUNA = os.path.join(FOLDER_DATA, "pengguna.txt")
 FILE_BARANG = os.path.join(FOLDER_DATA, "barang.txt")
+FILE_KATEGORI = os.path.join(FOLDER_DATA, "kategori.txt")
 FILE_TRANSAKSI = os.path.join(FOLDER_DATA, "transaksi.txt")
 FILE_DETAIL_TRANSAKSI = os.path.join(FOLDER_DATA, "detail_transaksi.txt")
 FILE_BARANG_MASUK = os.path.join(FOLDER_DATA, "barang_masuk.txt")
@@ -59,14 +71,13 @@ def tambah_data(lokasi_file, baris_baru):
 # 3. INISIALISASI FOLDER & DATA AWAL .TXT
 # ==========================================
 def inisialisasi_sistem():
-    # Buat 3 folder utama jika belum ada
-    for nama_folder in (FOLDER_DATA, FOLDER_STRUK, FOLDER_LAPORAN):
+    for nama_folder in (FOLDER_DATA, FOLDER_STRUK, FOLDER_LAPORAN, FOLDER_BACKUP):
         if not os.path.exists(nama_folder):
             os.makedirs(nama_folder)
 
-    # Buat 7 file .txt kosong jika belum ada
     daftar_semua_file = [
         FILE_PENGGUNA,
+        FILE_KATEGORI,
         FILE_BARANG,
         FILE_TRANSAKSI,
         FILE_DETAIL_TRANSAKSI,
@@ -74,21 +85,49 @@ def inisialisasi_sistem():
         FILE_BARANG_KELUAR,
         FILE_LOG_AKTIVITAS,
     ]
+
     for lokasi_file_sekarang in daftar_semua_file:
         if not os.path.exists(lokasi_file_sekarang):
             with open(lokasi_file_sekarang, "w", encoding="utf-8") as file_txt:
                 pass
 
-    # Isi pengguna.txt jika masih kosong
     if len(muat_data(FILE_PENGGUNA)) == 0:
         data_pengguna_awal = [
-            ["admin", "admin123", "Administrator SMK MART", "admin", "aktif"],
-            ["kasir1", "kasir123", "Dewi Lestari", "kasir", "aktif"],
-            ["kasir2", "kasir123", "Rian Saputra", "kasir", "aktif"],
-            ["kasir3", "kasir123", "Sari Wulandari", "kasir", "nonaktif"],
-            ["gudang1", "gudang123", "Budi Santoso", "gudang", "aktif"],
+            ["admin", hash_password("admin123"), "Nazwa", "admin", "aktif"],
+            ["kasir1", hash_password("kasir123"), "Onit", "kasir", "aktif"],
+            ["kasir2", hash_password("kasir123"), "Tasya", "kasir", "nonaktif"],
+            ["gudang1", hash_password("gudang123"), "Sukma", "gudang", "aktif"],
         ]
         simpan_data(FILE_PENGGUNA, data_pengguna_awal)
+
+    if len(muat_data(FILE_BARANG)) == 0:
+        # id , nama , kategori , harga beli ,  harga jual , stok sekarang , stok min
+        data_barang_awal = [
+            ["BRG001", "Beras Premium 5kg", "Sembako", 65000, 72000, 40, 10],
+            ["BRG002", "Minyak Goreng 2L", "Sembako", 34000, 38000, 8, 10],
+            ["BRG003", "Gula Pasir 1kg", "Sembako", 14500, 16500, 55, 15],
+            ["BRG004", "Teh Botol 450ml", "Minuman", 4000, 5500, 100, 30],
+            ["BRG005", "Air Mineral 600ml", "Minuman", 2200, 3500, 150, 50],
+            ["BRG006", "Kopi Sachet 10s", "Minuman", 10000, 12000, 9, 12],
+            ["BRG007", "Deterjen 800g", "Kebersihan", 18000, 21000, 5, 10],
+            ["BRG008", "Sabun Mandi", "Kebersihan", 3200, 4500, 80, 20],
+            ["BRG009", "Keripik Singkong", "Snack", 7000, 9000, 10, 10],
+            ["BRG010", "Mie Instan Goreng", "Makanan", 2800, 3500, 200, 50],
+            ["BRG011", "Susu UHT 1L", "Minuman", 15500, 18500, 0, 12],
+        ]
+
+        simpan_data(FILE_BARANG, data_barang_awal)
+
+    if len(muat_data(FILE_KATEGORI)) == 0:
+        data_kategori_awal = [
+            ["KAT001", "Sembako"],
+            ["KAT002", "Minuman"],
+            ["KAT003", "Kebersihan"],
+            ["KAT004", "Snack"],
+            ["KAT005", "Makanan"],
+        ]
+        simpan_data(FILE_KATEGORI, data_kategori_awal)
+
 
 # ==========================================
 # 4. FUNGSI BANTU FORMAT, ID, LOG, & VALIDASI
@@ -127,11 +166,9 @@ def format_tanggal(tanggal_db):
         return f"{bagian[2]}-{bagian[1]}-{bagian[0]}"
     return tanggal_db
 
-
 def cari_indeks_barang(daftar_barang, kode_barang):
-    # Mengembalikan nomor baris barang dengan kode tersebut, atau -1 jika tidak ada
     for nomor_baris, baris_barang in enumerate(daftar_barang):
-        if len(baris_barang) >= 6 and baris_barang[0] == kode_barang:
+        if len(baris_barang) >= 7 and baris_barang[0] == kode_barang:
             return nomor_baris
     return -1
 
@@ -185,6 +222,8 @@ def input_angka(pesan_input, batas_bawah=0):
         except ValueError:
             print("❌ Masukkan angka yang valid!")
 
+def hash_password(password_teks):
+    return hashlib.sha256(password_teks.encode("utf-8")).hexdigest()
 
 # ==========================================
 # 5. SISTEM LOGIN, RINGKASAN, & GANTI PASSWORD
@@ -204,11 +243,12 @@ def login_sistem():
         password_input = getpass.getpass("Password: ").strip() 
 
         daftar_pengguna = muat_data(FILE_PENGGUNA)
+        password_hash_input = hash_password(password_input)
         for baris_pengguna in daftar_pengguna:
             if len(baris_pengguna) < 5:
                 continue
             # Indeks pengguna.txt: [0]=username, [1]=password, [2]=nama_lengkap, [3]=peran, [4]=status
-            if baris_pengguna[0] == username_input and baris_pengguna[1] == password_input:
+            if baris_pengguna[0] == username_input and (baris_pengguna[1] == password_hash_input or baris_pengguna[1] == password_input):
                 if baris_pengguna[4].lower() != "aktif":
                     print("❌ Akun Anda telah dinonaktifkan. Hubungi Admin!")
                     catat_log_aktivitas(f"LOGIN_DITOLAK_NONAKTIF ({username_input})")
@@ -241,12 +281,12 @@ def cek_stok_minimum():
 
     ada_peringatan = False
     for baris_barang in daftar_barang:
-        if len(baris_barang) < 6:
+        if len(baris_barang) < 7:
             continue
         kode_barang = baris_barang[0]
         nama_barang = baris_barang[1]
-        stok_sekarang = baris_barang[4]
-        stok_minimum = baris_barang[5]
+        stok_sekarang = baris_barang[5]
+        stok_minimum = baris_barang[6]
 
         status_stok = hitung_status_stok(stok_sekarang, stok_minimum)
         if status_stok in ("MINIMUM", "HABIS"):
@@ -263,9 +303,9 @@ def tampilkan_ringkasan_login():
     tanggal_hari_ini_db = waktu_sekarang.strftime("%Y-%m-%d")
     tanggal_hari_ini_tampil = waktu_sekarang.strftime("%d-%m-%Y")
 
-    print("\n==========================================")
-    print("          SMK MART - SISTEM TOKO")
-    print("==========================================")
+    print("\n===========================================")
+    print("    SELAMAT DATANG DI APLIKASI SMK MART")
+    print("============================================")
     print(f"Pengguna : {nama_aktif} ({role_aktif})")
     print(f"Tanggal  : {tanggal_hari_ini_tampil}")
     print("------------------------------------------")
@@ -281,8 +321,8 @@ def tampilkan_ringkasan_login():
         jumlah_stok_habis = 0
 
         for baris_barang in daftar_barang:
-            if len(baris_barang) >= 6:
-                status_sekarang = hitung_status_stok(baris_barang[4], baris_barang[5])
+            if len(baris_barang) >= 7:
+                status_sekarang = hitung_status_stok(baris_barang[5], baris_barang[6])
                 if status_sekarang == "MINIMUM":
                     jumlah_stok_minimum += 1
                 elif status_sekarang == "HABIS":
@@ -323,14 +363,165 @@ def ganti_password_sendiri():
     daftar_pengguna = muat_data(FILE_PENGGUNA)
     for baris_pengguna in daftar_pengguna:
         if baris_pengguna[0] == user_aktif:
-            if baris_pengguna[1] != password_lama:
+            if baris_pengguna[1] != hash_password(password_lama) and baris_pengguna[1] != password_lama:
                 print("❌ Password lama yang Anda masukkan salah!")
                 return
-            baris_pengguna[1] = password_baru
+            baris_pengguna[1] = hash_password(password_baru)
             simpan_data(FILE_PENGGUNA, daftar_pengguna)
             catat_log_aktivitas("GANTI_PASSWORD_SENDIRI")
             print("✅ Password Anda berhasil diperbarui!")
             return
+
+# ==========================================
+# 5B. KELOLA DATA KATEGORI
+# ==========================================
+def tampilkan_data_kategori():
+    print("\n" + "=" * 15 + " DAFTAR KATEGORI BARANG " + "=" * 15)
+    daftar_kategori = muat_data(FILE_KATEGORI)
+    if len(daftar_kategori) == 0:
+        print("Belum ada data kategori tersimpan.")
+        return
+
+    daftar_barang = muat_data(FILE_BARANG)
+    print(f"{'No.':<5} {'Kode':<10} {'Nama Kategori':<25} {'Jml Barang':<10}")
+    print("-" * 55)
+    for nomor, kat in enumerate(daftar_kategori, start=1):
+        if len(kat) >= 2:
+            jml_brg = sum(1 for brg in daftar_barang if len(brg) >= 3 and brg[2].lower() == kat[1].lower())
+            print(f"{nomor:<5} {kat[0]:<10} {kat[1]:<25} {jml_brg:<10}")
+    print("-" * 55)
+
+
+def pilih_kategori_barang(pesan="Pilih nomor kategori: "):
+    while True:
+        daftar_kategori = muat_data(FILE_KATEGORI)
+        print("\n--- Pilih Kategori Tersedia ---")
+        for nomor, kat in enumerate(daftar_kategori, start=1):
+            print(f"{nomor}. {kat[0]} ({kat[1]})")
+        print("0. + Tambah Kategori Baru")
+
+        pilihan = input_angka(pesan, batas_bawah=0)
+        if pilihan == 0:
+            tambah_data_kategori()
+            continue
+        elif 1 <= pilihan <= len(daftar_kategori):
+            return daftar_kategori[pilihan - 1][1]
+        else:
+            print(f"❌ Pilihan tidak valid! Masukkan angka 0 sampai {len(daftar_kategori)}.")
+
+
+def tambah_data_kategori():
+    print("\n=== TAMBAH DATA KATEGORI ===")
+    nama_kategori = input_teks_valid("Masukkan Nama Kategori Baru (atau [B]atal): ")
+    if nama_kategori.lower() == "b":
+        print("❌ Penambahan kategori dibatalkan.")
+        return
+
+    daftar_kategori = muat_data(FILE_KATEGORI)
+    if any(kat[1].lower() == nama_kategori.lower() for kat in daftar_kategori if len(kat) >= 2):
+        print(f"❌ Kategori '{nama_kategori}' sudah ada!")
+        return
+
+    kode_kategori_baru = buat_id_otomatis(FILE_KATEGORI, "KAT")
+    konfirmasi = input(f"Yakin menambahkan kategori '{nama_kategori}' ({kode_kategori_baru})? (y/n): ").strip().lower()
+    if konfirmasi == "y":
+        tambah_data(FILE_KATEGORI, [kode_kategori_baru, nama_kategori])
+        catat_log_aktivitas(f"TAMBAH_KATEGORI {kode_kategori_baru} ({nama_kategori})")
+        print(f"✅ Kategori '{nama_kategori}' berhasil ditambahkan dengan kode {kode_kategori_baru}!")
+    else:
+        print("❌ Penambahan kategori dibatalkan.")
+
+
+def edit_data_kategori():
+    print("\n=== EDIT DATA KATEGORI ===")
+    daftar_kategori = muat_data(FILE_KATEGORI)
+    if len(daftar_kategori) == 0:
+        print("Belum ada data kategori.")
+        return
+
+    tampilkan_data_kategori()
+    kode_target = input("Masukkan Kode Kategori yang akan diubah (atau [B]atal): ").strip().upper()
+    if kode_target == "B":
+        print("❌ Edit kategori dibatalkan.")
+        return
+
+    indeks_target = -1
+    for i, kat in enumerate(daftar_kategori):
+        if len(kat) >= 2 and kat[0] == kode_target:
+            indeks_target = i
+            break
+
+    if indeks_target == -1:
+        print("❌ Kode Kategori tidak ditemukan!")
+        return
+
+    nama_lama = daftar_kategori[indeks_target][1]
+    nama_baru = input_teks_valid(f"Masukkan Nama Baru untuk '{nama_lama}': ")
+
+    if any(kat[1].lower() == nama_baru.lower() and kat[0] != kode_target for kat in daftar_kategori if len(kat) >= 2):
+        print(f"❌ Nama kategori '{nama_baru}' sudah digunakan!")
+        return
+
+    konfirmasi = input(f"Yakin mengubah kategori '{nama_lama}' menjadi '{nama_baru}'? (y/n): ").strip().lower()
+    if konfirmasi != "y":
+        print("❌ Edit kategori dibatalkan.")
+        return
+
+    daftar_kategori[indeks_target][1] = nama_baru
+    simpan_data(FILE_KATEGORI, daftar_kategori)
+
+    # Sinkronkan nama kategori pada data barang.txt
+    daftar_barang = muat_data(FILE_BARANG)
+    barang_diubah = False
+    for brg in daftar_barang:
+        if len(brg) >= 3 and brg[2].lower() == nama_lama.lower():
+            brg[2] = nama_baru
+            barang_diubah = True
+    if barang_diubah:
+        simpan_data(FILE_BARANG, daftar_barang)
+
+    catat_log_aktivitas(f"EDIT_KATEGORI {kode_target} ({nama_lama} -> {nama_baru})")
+    print(f"✅ Kategori berhasil diubah menjadi '{nama_baru}' (dan disinkronkan ke data barang)!")
+
+
+def hapus_data_kategori():
+    print("\n=== HAPUS DATA KATEGORI ===")
+    daftar_kategori = muat_data(FILE_KATEGORI)
+    if len(daftar_kategori) == 0:
+        print("Belum ada data kategori.")
+        return
+
+    tampilkan_data_kategori()
+    kode_target = input("Masukkan Kode Kategori yang akan dihapus (atau [B]atal): ").strip().upper()
+    if kode_target == "B":
+        print("❌ Hapus kategori dibatalkan.")
+        return
+
+    target_kat = None
+    for kat in daftar_kategori:
+        if len(kat) >= 2 and kat[0] == kode_target:
+            target_kat = kat[1]
+            break
+
+    if target_kat is None:
+        print("❌ Kode Kategori tidak ditemukan!")
+        return
+
+    daftar_barang = muat_data(FILE_BARANG)
+    sedang_dipakai = any(len(brg) >= 3 and brg[2].lower() == target_kat.lower() for brg in daftar_barang)
+    if sedang_dipakai:
+        print(f"❌ Ditolak! Kategori '{target_kat}' masih digunakan oleh data barang.")
+        return
+
+    konfirmasi = input(f"Yakin menghapus kategori '{target_kat}' ({kode_target})? (y/n): ").strip().lower()
+    if konfirmasi != "y":
+        print("❌ Penghapusan kategori dibatalkan.")
+        return
+
+    daftar_kategori_baru = [kat for kat in daftar_kategori if kat[0] != kode_target]
+    simpan_data(FILE_KATEGORI, daftar_kategori_baru)
+    catat_log_aktivitas(f"HAPUS_KATEGORI {kode_target} ({target_kat})")
+    print(f"✅ Kategori '{target_kat}' berhasil dihapus!")
 
 
 # ==========================================
@@ -344,18 +535,18 @@ def tambah_data_barang():
         return
 
     nama_barang = input_teks_valid("Masukkan Nama Barang: ")
-    kategori_barang = input_teks_valid("Masukkan Kategori Barang: ")
+    kategori_barang = pilih_kategori_barang("Pilih nomor Kategori Barang: ")
+    harga_beli = input_angka("Masukkan Harga Beli / Modal (> 0): Rp ", batas_bawah=1)
     harga_jual = input_angka("Masukkan Harga Jual Toko (> 0): Rp ", batas_bawah=1)
     minimal_stok = input_angka("Masukkan Minimal Stok (>= 0): ", batas_bawah=0)
 
     kode_barang_baru = buat_id_otomatis(FILE_BARANG, "BRG")
     konfirmasi_tambah = input(
-        f"Apakah Anda yakin ingin menambahkan barang '{nama_barang}' dengan kode {kode_barang_baru} (stok awal 0)? (y/n): "
+        f"Yakin menambahkan '{nama_barang}' [{kategori_barang}] (Beli: {format_rupiah(harga_beli)} | Jual: {format_rupiah(harga_jual)}) dengan kode {kode_barang_baru}? (y/n): "
     ).strip().lower()
 
     if konfirmasi_tambah == "y":
-        # Format barang.txt: [0]=kode, [1]=nama, [2]=kategori, [3]=harga, [4]=stok, [5]=stok_min
-        baris_barang_baru = [kode_barang_baru, nama_barang, kategori_barang, harga_jual, 0, minimal_stok]
+        baris_barang_baru = [kode_barang_baru, nama_barang, kategori_barang, harga_beli, harga_jual, 0, minimal_stok]
         tambah_data(FILE_BARANG, baris_barang_baru)
         catat_log_aktivitas(f"TAMBAH_BARANG {kode_barang_baru} ({nama_barang})")
         print(f"✅ Data barang '{nama_barang}' berhasil ditambahkan dengan kode {kode_barang_baru}!")
@@ -364,22 +555,25 @@ def tambah_data_barang():
 
 
 def cetak_tabel_barang(daftar_barang_tampil):
-    print(f"\n{'Kode':<10} {'Nama Barang':<24} {'Kategori':<15} {'Harga':<14} {'Stok':<10} {'Min':<8} {'Status':<10}")
-    print("-" * 95)
+    print(f"\n{'Kode':<8} {'Nama Barang':<22} {'Kategori':<13} {'H. Beli':<13} {'H. Jual':<13} {'Stok':<9} {'Min':<8} {'Status':<9}")
+    print("-" * 105)
     for baris_barang in daftar_barang_tampil:
         kode_barang = baris_barang[0]
         nama_barang = baris_barang[1]
         kategori_barang = baris_barang[2]
-        harga_barang = baris_barang[3]
-        stok_barang = baris_barang[4]
-        stok_minimum = baris_barang[5]
+        harga_beli = baris_barang[3]
+        harga_jual = baris_barang[4]
+        stok_barang = baris_barang[5]
+        stok_minimum = baris_barang[6]
 
         status_stok = hitung_status_stok(stok_barang, stok_minimum)
-        harga_teks = format_rupiah(harga_barang)
+        harga_beli_teks = format_rupiah(harga_beli)
+        harga_jual_teks = format_rupiah(harga_jual)
         stok_teks = f"{stok_barang} pcs"
         minimum_teks = f"{stok_minimum} pcs"
-        print(f"{kode_barang:<10} {nama_barang:<24} {kategori_barang:<15} {harga_teks:<14} {stok_teks:<10} {minimum_teks:<8} {status_stok:<10}")
-    print("-" * 95)
+
+        print(f"{kode_barang:<8} {nama_barang:<22} {kategori_barang:<13} {harga_beli_teks:<13} {harga_jual_teks:<13} {stok_teks:<9} {minimum_teks:<8} {status_stok:<9}")
+    print("-" * 105)
 
 
 def urutkan_dan_tampilkan_barang():
@@ -389,7 +583,7 @@ def urutkan_dan_tampilkan_barang():
         print("Belum ada data barang di sistem.")
         return
 
-    daftar_barang_valid = [baris for baris in daftar_barang if len(baris) >= 6]
+    daftar_barang_valid = [baris for baris in daftar_barang if len(baris) >= 7]
 
     # Bubble Sort berdasarkan Nama Barang (indeks ke-1)
     jumlah_data = len(daftar_barang_valid)
@@ -402,6 +596,7 @@ def urutkan_dan_tampilkan_barang():
                 )
 
     cetak_tabel_barang(daftar_barang_valid)
+
 def searching_data_barang():
     daftar_barang = muat_data(FILE_BARANG)
     if len(daftar_barang) == 0:
@@ -418,7 +613,7 @@ def searching_data_barang():
 
     hasil_pencarian = []
     for baris_barang in daftar_barang:
-        if len(baris_barang) < 6:
+        if len(baris_barang) < 7:
             continue
         kode_barang = baris_barang[0]
         nama_barang = baris_barang[1]
@@ -464,12 +659,14 @@ def edit_data_barang():
             continue
         break
 
+    # Ambil data lama berdasarkan indeks 7 kolom
     data_barang_lama = daftar_barang[nomor_baris_target]
     nama_baru = data_barang_lama[1]
     kategori_baru = data_barang_lama[2]
-    harga_baru = int(data_barang_lama[3])
-    stok_sekarang = data_barang_lama[4]
-    minimal_stok_baru = int(data_barang_lama[5])
+    harga_beli_baru = int(data_barang_lama[3])
+    harga_jual_baru = int(data_barang_lama[4])
+    stok_sekarang = data_barang_lama[5]
+    minimal_stok_baru = int(data_barang_lama[6])
 
     perubahan_terjadi = False
 
@@ -477,37 +674,47 @@ def edit_data_barang():
         print(f"\n=== Edit Data Barang [{kode_barang_target}] (Stok saat ini: {stok_sekarang} pcs) ===")
         print(f"1. Nama Barang   : {nama_baru}")
         print(f"2. Kategori      : {kategori_baru}")
-        print(f"3. Harga Jual    : {format_rupiah(harga_baru)}")
-        print(f"4. Batas Minimum : {minimal_stok_baru}")
-        print("5. Simpan Perubahan")
+        print(f"3. Harga Beli    : {format_rupiah(harga_beli_baru)}")
+        print(f"4. Harga Jual    : {format_rupiah(harga_jual_baru)}")
+        print(f"5. Batas Minimum : {minimal_stok_baru}")
+        print("6. Simpan Perubahan")
         print("0. Batal / Keluar")
 
-        pilihan_edit = input("Pilih menu edit (0-5): ").strip()
+        pilihan_edit = input("Pilih menu edit (0-6): ").strip()
 
         if pilihan_edit == "1":
             nama_baru = input_teks_valid("Masukkan Nama Barang Baru: ")
             perubahan_terjadi = True
         elif pilihan_edit == "2":
-            kategori_baru = input_teks_valid("Masukkan Kategori Baru: ")
+            kategori_baru = pilih_kategori_barang("Pilih nomor Kategori Baru: ")
             perubahan_terjadi = True
         elif pilihan_edit == "3":
-            harga_baru = input_angka("Masukkan Harga Jual Baru (> 0): Rp ", batas_bawah=1)
+            harga_beli_baru = input_angka("Masukkan Harga Beli Baru (> 0): Rp ", batas_bawah=1)
+            if harga_jual_baru < harga_beli_baru:
+                print("⚠️ Peringatan: Harga Jual saat ini lebih rendah dari Harga Beli baru!")
             perubahan_terjadi = True
         elif pilihan_edit == "4":
-            minimal_stok_baru = input_angka("Masukkan Batas Minimum Baru (>= 0): ", batas_bawah=0)
+            harga_jual_baru = input_angka("Masukkan Harga Jual Baru (> 0): Rp ", batas_bawah=1)
+            if harga_jual_baru < harga_beli_baru:
+                print("⚠️ Peringatan: Harga Jual lebih rendah dari Harga Beli (berpotensi rugi)!")
             perubahan_terjadi = True
         elif pilihan_edit == "5":
+            minimal_stok_baru = input_angka("Masukkan Batas Minimum Baru (>= 0): ", batas_bawah=0)
+            perubahan_terjadi = True
+        elif pilihan_edit == "6":
             if not perubahan_terjadi:
                 print("⚠️ Tidak ada perubahan data yang dibuat.")
                 return
 
             konfirmasi_edit = input("Apakah Anda yakin ingin menyimpan perubahan ini? (y/n): ").strip().lower()
             if konfirmasi_edit == "y":
+                # Simpan kembali dengan urutan 7 kolom yang sesuai
                 daftar_barang[nomor_baris_target] = [
                     kode_barang_target,
                     nama_baru,
                     kategori_baru,
-                    harga_baru,
+                    harga_beli_baru,
+                    harga_jual_baru,
                     stok_sekarang,
                     minimal_stok_baru,
                 ]
@@ -522,6 +729,7 @@ def edit_data_barang():
             return
         else:
             print("❌ Pilihan tidak valid!")
+
 
 
 def hapus_data_barang():
@@ -608,8 +816,8 @@ def catat_barang_masuk():
         print("❌ Pencatatan barang masuk dibatalkan.")
         return
 
-    stok_baru = int(daftar_barang[nomor_baris_target][4]) + jumlah_masuk
-    daftar_barang[nomor_baris_target][4] = stok_baru
+    stok_baru = int(daftar_barang[nomor_baris_target][5]) + jumlah_masuk
+    daftar_barang[nomor_baris_target][5] = stok_baru
     simpan_data(FILE_BARANG, daftar_barang)
 
     # Format barang_masuk.txt: [0]=id_masuk, [1]=tanggal, [2]=kode_barang, [3]=jumlah, [4]=pemasok, [5]=petugas
@@ -642,7 +850,7 @@ def catat_barang_keluar():
             continue
         break
 
-    stok_sekarang = int(daftar_barang[nomor_baris_target][4])
+    stok_sekarang = int(daftar_barang[nomor_baris_target][5])
     if stok_sekarang == 0:
         print("❌ Stok barang ini 0 (HABIS), tidak bisa mengeluarkan barang!")
         return
@@ -674,7 +882,7 @@ def catat_barang_keluar():
     konfirmasi_simpan = input(f"Simpan barang keluar {id_keluar_baru} sebanyak {jumlah_keluar} pcs ({alasan_keluar})? (y/n): ").strip().lower()
     if konfirmasi_simpan == "y":
         stok_baru = stok_sekarang - jumlah_keluar
-        daftar_barang[nomor_baris_target][4] = stok_baru
+        daftar_barang[nomor_baris_target][5] = stok_baru
         simpan_data(FILE_BARANG, daftar_barang)
 
         # Format barang_keluar.txt: [0]=id_keluar, [1]=tanggal, [2]=kode_barang, [3]=jumlah, [4]=alasan, [5]=keterangan, [6]=petugas
@@ -734,7 +942,7 @@ def lihat_kartu_stok():
     daftar_riwayat.sort(key=lambda item: (item[0], item[1], item[3]))
 
     print(f"\nKartu Stok    : {info_barang[1]} ({kode_barang_target}) | Kategori: {info_barang[2]}")
-    print(f"Stok Saat Ini : {info_barang[4]} pcs (Status: {hitung_status_stok(info_barang[4], info_barang[5])})")
+    print(f"Stok Saat Ini : {info_barang[5]} pcs (Status: {hitung_status_stok(info_barang[5], info_barang[6])})")
     print("-" * 78)
     print(f"{'Tanggal':<12} {'Jenis':<10} {'Ref ID':<10} {'Mutasi':<8} {'Keterangan':<32}")
     print("-" * 78)
@@ -805,7 +1013,7 @@ def tambah_data_transaksi():
                 stok_fisik = 0
                 for baris_barang in daftar_barang:
                     if baris_barang[0] == item_ubah["kode"]:
-                        stok_fisik = int(baris_barang[4])
+                        stok_fisik = int(baris_barang[5])
                         break
 
                 jumlah_baru = input_angka(f"Masukkan jumlah baru untuk '{item_ubah['nama']}' (0 untuk hapus, maks {stok_fisik}): ", batas_bawah=0)
@@ -822,7 +1030,7 @@ def tambah_data_transaksi():
 
             daftar_cocok = []
             for baris_barang in daftar_barang:
-                if len(baris_barang) < 6:
+                if len(baris_barang) < 7:
                     continue
                 kode_barang = baris_barang[0]
                 nama_barang = baris_barang[1]
@@ -839,7 +1047,7 @@ def tambah_data_transaksi():
             else:
                 print(f"\nDitemukan {len(daftar_cocok)} barang yang cocok:")
                 for nomor_urut, baris_barang in enumerate(daftar_cocok, start=1):
-                    print(f"{nomor_urut}. [{baris_barang[0]}] {baris_barang[1]} ({baris_barang[2]}) - {format_rupiah(baris_barang[3])} | Stok: {baris_barang[4]}")
+                    print(f"{nomor_urut}. [{baris_barang[0]}] {baris_barang[1]} ({baris_barang[2]}) - {format_rupiah(baris_barang[4])} | Stok: {baris_barang[5]}")
                 print("0. Batal pilih")
 
                 pilih_barang = input_angka("Pilih nomor barang: ", batas_bawah=0)
@@ -850,7 +1058,7 @@ def tambah_data_transaksi():
                     continue
                 barang_terpilih = daftar_cocok[pilih_barang - 1]
 
-            kode_brg, nama_brg, _, harga_str, stok_str, _ = barang_terpilih
+            kode_brg, nama_brg, _, _, harga_str, stok_str, _ = barang_terpilih
             harga_brg = int(harga_str)
             stok_brg = int(stok_str)
 
@@ -888,7 +1096,7 @@ def tambah_data_transaksi():
 
         total_bayar = sum(item["subtotal"] for item in keranjang_belanja)
         print("\n==============================================")
-        print("           RINGKASAN BELANJA AKHIR            ")
+        print("               RINGKASAN BELANJA              ")
         print("==============================================")
         for nomor_urut, item in enumerate(keranjang_belanja, start=1):
             print(f"{nomor_urut}. {item['nama']} ({item['qty']} x {format_rupiah(item['harga'])}) = {format_rupiah(item['subtotal'])}")
@@ -926,9 +1134,9 @@ def tambah_data_transaksi():
         for item in keranjang_belanja:
             for baris_barang in daftar_barang:
                 if baris_barang[0] == item["kode"]:
-                    stok_baru = int(baris_barang[4]) - item["qty"]
-                    baris_barang[4] = stok_baru
-                    status_baru = hitung_status_stok(stok_baru, baris_barang[5])
+                    stok_baru = int(baris_barang[5]) - item["qty"]
+                    baris_barang[5] = stok_baru
+                    status_baru = hitung_status_stok(stok_baru, baris_barang[6])
                     if status_baru in ("MINIMUM", "HABIS"):
                         peringatan_stok_kasir.append(f"'{baris_barang[1]}' ({baris_barang[0]}) -> Status: {status_baru} (Sisa: {stok_baru} pcs)")
                     break
@@ -1237,24 +1445,34 @@ def laporan_stok_gudang():
     total_keluar = sum(int(keluar[3]) for keluar in barang_keluar)
 
     baris_laporan = [
-        "=================================================================================",
-        f"LAPORAN STOK & AKTIVITAS GUDANG SMK MART ({label_awal} s.d. {label_akhir})",
-        "=================================================================================",
-        "--- DAFTAR STOK BARANG SAAT INI ---",
-        f"{'Kode':<10} {'Nama Barang':<24} {'Kategori':<15} {'Stok':<8} {'Min':<8} {'Status':<10}",
-        "-" * 81,
+        "=================================================================================================",
+        f"LAPORAN STOK, NILAI PERSEDIAAN & AKTIVITAS GUDANG SMK MART ({label_awal} s.d. {label_akhir})",
+        "=================================================================================================",
+        "--- DAFTAR STOK & NILAI PERSEDIAAN BARANG SAAT INI ---",
+        f"{'Kode':<8} {'Nama Barang':<22} {'Kategori':<13} {'Harga':<12} {'Stok':<6} {'Status':<9} {'Nilai Aset':<15}",
+        "-" * 97,
     ]
+
+    total_nilai_persediaan = 0
 
     if len(daftar_barang) == 0:
         baris_laporan.append("Tidak ada data barang.")
     else:
         for baris_barang in daftar_barang:
-            kode, nama, kategori, _, stok, stok_min = baris_barang
+            if len(baris_barang) < 7:
+                continue
+            kode, nama, kategori, harga_beli, harga_jual, stok, stok_min = baris_barang
             status = hitung_status_stok(stok, stok_min)
-            baris_laporan.append(f"{kode:<10} {nama:<24} {kategori:<15} {stok:<8} {stok_min:<8} {status:<10}")
+            nilai_barang = int(harga_beli) * int(stok)
+            total_nilai_persediaan += nilai_barang
+            baris_laporan.append(
+                f"{kode:<8} {nama:<22} {kategori:<13} {format_rupiah(harga_beli):<12} {stok:<6} {status:<9} {format_rupiah(nilai_barang):<15}"
+            )
 
     baris_laporan.extend([
-        "-" * 81,
+        "-" * 97,
+        f"TOTAL NILAI PERSEDIAAN GUDANG : {format_rupiah(total_nilai_persediaan)}",
+        "-" * 97,
         f"\n--- BARANG MASUK ({len(barang_masuk)} transaksi | Total: {total_masuk} pcs) ---",
     ])
     if len(barang_masuk) == 0:
@@ -1325,7 +1543,7 @@ def tambah_data_pengguna():
 
     konfirmasi = input(f"Yakin menambah '{nama_lengkap}' ({username}) sebagai {role}? (y/n): ").strip().lower()
     if konfirmasi == "y":
-        tambah_data(FILE_PENGGUNA, [username, password, nama_lengkap, role, "aktif"])
+        tambah_data(FILE_PENGGUNA, [username, hash_password(password), nama_lengkap, role, "aktif"])
         catat_log_aktivitas(f"TAMBAH_USER ({username})")
         print(f"✅ Pengguna '{nama_lengkap}' ({username}) berhasil ditambahkan!")
     else:
@@ -1386,7 +1604,7 @@ def edit_pengguna():
         konfirmasi = input(f"Yakin mengubah role menjadi '{role_baru}'? (y/n): ").strip().lower()
         if konfirmasi != "y":
             return
-        daftar_pengguna[nomor_baris_target][3] = role_baru
+        daftar_pengguna[nomor_baris_target][3] = role_baru 
     elif pilih == "3":
         if target[0] == user_aktif:
             print("❌ Tidak bisa menonaktifkan akun sendiri yang sedang login!")
@@ -1429,7 +1647,7 @@ def reset_password_pengguna():
                 print("❌ Password minimal 6 karakter!")
             konfirmasi = input(f"Yakin reset password untuk akun '{baris_pengguna[0]}'? (y/n): ").strip().lower()
             if konfirmasi == "y":
-                baris_pengguna[1] = password_baru
+                baris_pengguna[1] = hash_password(password_baru)
                 simpan_data(FILE_PENGGUNA, daftar_pengguna)
                 catat_log_aktivitas(f"RESET_PASSWORD ({baris_pengguna[0]})")
                 print(f"✅ Password akun '{baris_pengguna[0]}' berhasil direset!")
@@ -1468,6 +1686,73 @@ def tampilkan_log_aktivitas():
             tanggal_tampil = format_tanggal(baris_log[0])
             print(f"{tanggal_tampil:<12} {baris_log[1]:<10} {baris_log[2]:<15} {baris_log[3]}")
     print("-" * 77)
+
+# ==========================================
+# 10B. BACKUP & RESTORE DATA (FITUR BONUS)
+# ==========================================
+def backup_data():
+    print("\n=== BACKUP DATA SISTEM ===")
+    waktu_sekarang = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+    nama_folder_backup = f"backup_{waktu_sekarang}"
+    tujuan_backup = os.path.join(FOLDER_BACKUP, nama_folder_backup)
+
+    konfirmasi = input(f"Buat cadangan seluruh folder '{FOLDER_DATA}' ke '{tujuan_backup}'? (y/n): ").strip().lower()
+    if konfirmasi != "y":
+        print("❌ Proses backup dibatalkan.")
+        return
+
+    try:
+        shutil.copytree(FOLDER_DATA, tujuan_backup)
+        catat_log_aktivitas(f"BACKUP_DATA ({nama_folder_backup})")
+        print(f"✅ Backup berhasil dibuat di: {tujuan_backup}")
+    except Exception as error:
+        print(f"❌ Gagal membuat backup: {error}")
+
+
+def restore_data():
+    print("\n=== RESTORE DATA SISTEM ===")
+    if not os.path.exists(FOLDER_BACKUP):
+        print("❌ Folder backup belum tersedia.")
+        return
+
+    daftar_backup = sorted(
+        [nama for nama in os.listdir(FOLDER_BACKUP) if os.path.isdir(os.path.join(FOLDER_BACKUP, nama))],
+        reverse=True,
+    )
+
+    if len(daftar_backup) == 0:
+        print("⚠️ Belum ada file cadangan (backup) yang tersimpan.")
+        return
+
+    print("Daftar Cadangan Tersedia (Terbaru di atas):")
+    for nomor_urut, nama_folder in enumerate(daftar_backup, start=1):
+        print(f"{nomor_urut}. {nama_folder}")
+    print("0. Batal")
+
+    pilih = input_angka("Pilih nomor backup yang akan dipulihkan: ", batas_bawah=0)
+    if pilih == 0:
+        print("❌ Proses restore dibatalkan.")
+        return
+    if pilih > len(daftar_backup):
+        print("❌ Nomor pilihan tidak valid!")
+        return
+
+    folder_terpilih = daftar_backup[pilih - 1]
+    sumber_restore = os.path.join(FOLDER_BACKUP, folder_terpilih)
+
+    print("⚠️ PERINGATAN: Seluruh data saat ini akan ditimpa dengan data dari backup tersebut!")
+    konfirmasi = input(f"Yakin ingin memulihkan data dari '{folder_terpilih}'? (y/n): ").strip().lower()
+    if konfirmasi != "y":
+        print("❌ Proses restore dibatalkan.")
+        return
+
+    try:
+        shutil.copytree(sumber_restore, FOLDER_DATA, dirs_exist_ok=True)
+        catat_log_aktivitas(f"RESTORE_DATA ({folder_terpilih})")
+        print(f"✅ Data berhasil dipulihkan dari: {folder_terpilih}")
+    except Exception as error:
+        print(f"❌ Gagal memulihkan data: {error}")
+
 # ==========================================
 # 11. PROGRAM UTAMA
 # ==========================================
@@ -1492,8 +1777,10 @@ while True:
             print("4. Laporan Stok & Aktivitas Gudang")
             print("5. Lihat Log Aktivitas (20 Terakhir)")
             print("6. Ganti Password Sendiri")
+            print("7. Backup & Restore Data")
             print("0. Log Out")
-            pilihan = input("Pilih menu (0-6): ").strip()
+            pilihan = input("Pilih menu (0-7): ").strip()
+
 
             if pilihan == "1":
                 while True:
@@ -1516,30 +1803,67 @@ while True:
                         break
                     else:
                         print("Pilihan salah! Silakan masukan pilihan yang valid.")
-
             elif pilihan == "2":
                 while True:
-                    print("\n--- KELOLA DATA BARANG & STOK ---")
+                    print("\n--- KELOLA DATA BARANG, KATEGORI & STOK ---")
                     print("1. Tambah Data Barang")
-                    print("2. Tampilkan Daftar Barang & Stok")
-                    print("3. Pencarian Barang & Filter Kategori")
-                    print("4. Edit Data Barang")
-                    print("5. Hapus Data Barang")
-                    print("6. Lihat Kartu Stok Barang")
+                    print("2. Kelola Stok Barang")
+                    print("3. Tampilkan Daftar Barang & Stok")
+                    print("4. Pencarian Barang & Filter Kategori")
+                    print("5. Edit Data Barang")
+                    print("6. Hapus Data Barang")
+                    print("7. Lihat Kartu Stok Barang")
+                    print("8. Kelola Kategori")
                     print("0. Kembali ke Dashboard Utama")
-                    sub_pil = input("Pilih (0-6): ").strip()
+                    sub_pil = input("Pilih (0-8): ").strip()
                     if sub_pil == "1":
                         tambah_data_barang()
                     elif sub_pil == "2":
-                        urutkan_dan_tampilkan_barang()
+                        while True:
+                            print("\n=== Kelola Stok Barang ===")
+                            print("1. Catat Barang Masuk")
+                            print("2. Catat Barang Keluar")
+                            print("0. Kembali ke Kelola Data")
+                            pil_sub = input("Pilih (0-2): ").strip()
+                            if pil_sub == "1":
+                                catat_barang_masuk()
+                            elif pil_sub == "2":
+                                catat_barang_keluar()
+                            elif pil_sub == "0":
+                                break
+                            else:
+                                print("Pilihan tidak valid!")
                     elif sub_pil == "3":
-                        searching_data_barang()
+                        urutkan_dan_tampilkan_barang()
                     elif sub_pil == "4":
-                        edit_data_barang()
+                        searching_data_barang()
                     elif sub_pil == "5":
-                        hapus_data_barang()
+                        edit_data_barang()
                     elif sub_pil == "6":
+                        hapus_data_barang()
+                    elif sub_pil == "7":
                         lihat_kartu_stok()
+                    elif sub_pil == "8":
+                        while True:
+                            print("\n=== KELOLA KATEGORI ===")
+                            print("1. Tampilkan Daftar Kategori")
+                            print("2. Tambah Kategori")
+                            print("3. Edit Kategori")
+                            print("4. Hapus Kategori")
+                            print("0. Kembali")
+                            pil_kat = input("Pilih (0-4): ").strip()
+                            if pil_kat == "1":
+                                tampilkan_data_kategori()
+                            elif pil_kat == "2":
+                                tambah_data_kategori()
+                            elif pil_kat == "3":
+                                edit_data_kategori()
+                            elif pil_kat == "4":
+                                hapus_data_kategori()
+                            elif pil_kat == "0":
+                                break
+                            else:
+                                print("❌ Pilihan tidak valid!")
                     elif sub_pil == "0":
                         break
                     else:
@@ -1566,13 +1890,25 @@ while True:
 
             elif pilihan == "4":
                 laporan_stok_gudang()
-
             elif pilihan == "5":
                 tampilkan_log_aktivitas()
-
             elif pilihan == "6":
                 ganti_password_sendiri()
-
+            elif pilihan == "7":
+                while True:
+                    print("\n--- BACKUP & RESTORE DATA ---")
+                    print("1. Backup Data Sekarang")
+                    print("2. Restore Data dari Backup")
+                    print("0. Kembali ke Dashboard Utama")
+                    sub_pil = input("Pilih (0-2): ").strip()
+                    if sub_pil == "1":
+                        backup_data()
+                    elif sub_pil == "2":
+                        restore_data()
+                    elif sub_pil == "0":
+                        break
+                    else:
+                        print("❌ Pilihan tidak valid!")
             elif pilihan == "0":
                 if konfirmasi_logout():
                     logout = True
