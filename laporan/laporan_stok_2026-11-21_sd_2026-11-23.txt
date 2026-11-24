@@ -1,0 +1,27 @@
+=================================================================================================
+LAPORAN STOK, NILAI PERSEDIAAN & AKTIVITAS GUDANG SMK MART (21-11-2026 s.d. 23-11-2026)
+=================================================================================================
+--- DAFTAR STOK & NILAI PERSEDIAAN BARANG SAAT INI (URUT KATEGORI) ---
+Kode     Nama Barang            Kategori      Harga        Stok   Status      Nilai Aset     
+---------------------------------------------------------------------------------------------------
+BRG007   Deterjen 800g          Kebersihan    Rp 18.000    5      MINIMUM     Rp 90.000      
+BRG008   Sabun Mandi            Kebersihan    Rp 3.200     80     AMAN        Rp 256.000     
+BRG010   Mie Instan Goreng      Makanan       Rp 2.800     200    AMAN        Rp 560.000     
+BRG005   Air Mineral 600ml      Minuman       Rp 2.200     150    AMAN        Rp 330.000     
+BRG006   Kopi Sachet 10s        Minuman       Rp 10.000    9      MINIMUM     Rp 90.000      
+BRG011   Susu UHT 1L            Minuman       Rp 15.500    0      HABIS       Rp 0           
+BRG004   Teh Botol 450ml        Minuman       Rp 4.000     100    AMAN        Rp 400.000     
+BRG001   Beras Premium 5kg      Sembako       Rp 65.000    40     AMAN        Rp 2.600.000   
+BRG003   Gula Pasir 1kg         Sembako       Rp 14.500    55     AMAN        Rp 797.500     
+BRG002   Minyak Goreng 2L       Sembako       Rp 34.000    8      MINIMUM     Rp 272.000     
+BRG009   Keripik Singkong       Snack         Rp 7.000     10     MINIMUM     Rp 70.000      
+---------------------------------------------------------------------------------------------------
+TOTAL NILAI PERSEDIAAN GUDANG : Rp 5.465.500
+---------------------------------------------------------------------------------------------------
+
+--- BARANG MASUK (0 transaksi | Total: 0 pcs) ---
+Tidak ada data barang masuk pada rentang tanggal ini.
+
+--- BARANG KELUAR (0 transaksi | Total: 0 pcs) ---
+Tidak ada data barang keluar pada rentang tanggal ini.
+=================================================================================================
