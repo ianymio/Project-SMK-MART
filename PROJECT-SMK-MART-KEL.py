@@ -185,10 +185,10 @@ def konfirmasi_logout():
 
 def hitung_status_stok(jumlah_stok, batas_minimum):
     if int(jumlah_stok) == 0:
-        return "HABIS"
+        return "⚠️ HABIS"
     elif int(jumlah_stok) <= int(batas_minimum):
-        return "MINIMUM"
-    return "AMAN"
+        return "⚠️ MINIMUM"
+    return "✅ AMAN"
 
 def input_teks_valid(pesan_input, wajib_diisi=True, tanpa_spasi=False, rahasia=False):
     while True:
@@ -1191,7 +1191,7 @@ def cetak_struk_digital(id_transaksi):
 
     baris_struk = [
         "==========================================",
-        "                 SMK MART",
+        "          STRUK DIGITAL SMK MART",          
         "==========================================",
         f"No. Transaksi : {id_transaksi}",
         f"Tanggal       : {tanggal_tampil} {jam_db}",

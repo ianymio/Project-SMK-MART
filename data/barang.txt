@@ -1,0 +1,12 @@
+BRG001|Beras Premium 5kg|Sembako|65000|72000|40|10
+BRG002|Minyak Goreng 2L|Sembako|34000|38000|8|10
+BRG003|Gula Pasir 1kg|Sembako|14500|16500|55|15
+BRG004|Teh Botol 450ml|Minuman|4000|5500|100|30
+BRG005|Air Mineral 600ml|Minuman|2200|3500|150|50
+BRG006|Kopi Sachet 10s|Minuman|10000|12000|9|12
+BRG007|Deterjen 800g|Kebersihan|18000|21000|5|10
+BRG008|Sabun Mandi|Kebersihan|3200|4500|80|20
+BRG009|Keripik Singkong|Snack|7000|9000|10|10
+BRG010|Mie Instan Goreng|Makanan|2800|3500|200|50
+BRG011|Susu UHT 1L|Minuman|15500|18500|0|12
+BRG012|Pensil|Alat TulisKAT007|1700|2000|0|10
