@@ -9,4 +9,3 @@ BRG008|Sabun Mandi|Kebersihan|3200|4500|80|20
 BRG009|Keripik Singkong|Snack|7000|9000|10|10
 BRG010|Mie Instan Goreng|Makanan|2800|3500|200|50
 BRG011|Susu UHT 1L|Minuman|15500|18500|0|12
-BRG012|Pensil|Alat TulisKAT007|1700|2000|0|10
