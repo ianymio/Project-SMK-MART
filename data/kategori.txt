@@ -5,3 +5,4 @@ KAT004|Snack
 KAT005|Makanan
 KAT006|aksesoris
 KAT007|Alat Tulis
+KAT008|Beras
